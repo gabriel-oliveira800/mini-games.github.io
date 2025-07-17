@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo: Verdadeiro ou Falso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .answer-btn.selected {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px #3b82f6;
+            /* Ring color */
+        }
+
+        .feedback-correct {
+            background-color: #dcfce7;
+            border-left-color: #22c55e;
+        }
+
+        .feedback-incorrect {
+            background-color: #fee2e2;
+            border-left-color: #ef4444;
+        }
+
+        .btn-correct {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+
+        .btn-incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+    </style>
+</head>
+
+<body class="bg-blue-50 flex items-center justify-center min-h-screen p-4">
+
+    <div id="game-container" class="w-full max-w-3xl mx-auto">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-slate-800">Jogo: Verdadeiro ou Falso?</h1>
+                <p class="text-slate-600">Responda a todas as perguntas e depois confira o gabarito!</p>
+            </div>
+
+            <!-- Questions List -->
+            <div id="questions-list" class="space-y-8">
+                <!-- As perguntas serão inseridas aqui pelo JavaScript -->
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-10 text-center">
+                <button id="check-answers-btn"
+                    class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition">Ver
+                    Gabarito</button>
+                <button id="restart-btn"
+                    class="hidden w-full sm:w-auto bg-purple-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-purple-700 transition">Jogar
+                    Novamente</button>
+            </div>
+
+            <!-- Results Area -->
+            <div id="results-area" class="hidden text-center mt-8 p-6 bg-blue-100 rounded-xl">
+                <h2 id="score-text" class="text-2xl font-bold text-blue-800"></h2>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                text: "Meus e-mails ficam guardados apenas no meu celular.",
+                correctAnswer: false,
+                explanation: "Seus e-mails não ficam só no celular! Eles são armazenados em servidores do seu provedor (como Google ou Microsoft), na chamada 'nuvem'. O celular é apenas um dos aparelhos que você usa para acessá-los."
+            },
+            {
+                text: "Um pen drive pode ser usado para transportar meus dados pessoais.",
+                correctAnswer: true,
+                explanation: "Um pen drive é um dispositivo de armazenamento físico. Qualquer arquivo digital, incluindo seus dados pessoais como documentos e fotos, pode ser salvo e transportado nele."
+            },
+            {
+                text: "Quando posto uma foto no Instagram, ela fica armazenada na 'nuvem'.",
+                correctAnswer: true,
+                explanation: "A 'nuvem' é uma rede de servidores onde as empresas de internet guardam dados. Quando você posta no Instagram, sua foto vai para os servidores deles, permitindo que você e outros a vejam de qualquer lugar."
+            },
+            {
+                text: "O HD (Disco Rígido) do computador é um lugar onde meus arquivos e dados são salvos.",
+                correctAnswer: true,
+                explanation: "O HD (ou SSD) é a principal unidade de armazenamento do computador. É nele que o sistema operacional, seus programas e todos os seus arquivos pessoais ficam gravados."
+            }
+        ].sort(() => Math.random() - 0.5);
+
+        const questionsList = document.getElementById('questions-list');
+        const checkAnswersBtn = document.getElementById('check-answers-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const resultsArea = document.getElementById('results-area');
+        const scoreText = document.getElementById('score-text');
+
+        function renderQuestions() {
+            questionsList.innerHTML = '';
+            questions.forEach((q, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-item';
+                questionElement.dataset.questionIndex = index;
+
+                questionElement.innerHTML = `
+                    <p class="font-bold text-slate-700 mb-4">${index + 1}. ${q.text}</p>
+                    <div class="answer-options flex flex-col sm:flex-row gap-4">
+                        <button data-answer="true" class="answer-btn w-full text-lg font-semibold py-3 px-6 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition">Verdadeiro</button>
+                        <button data-answer="false" class="answer-btn w-full text-lg font-semibold py-3 px-6 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition">Falso</button>
+                    </div>
+                    <div class="feedback-text hidden mt-4 p-4 rounded-lg border-l-4"></div>
+                `;
+                questionsList.appendChild(questionElement);
+            });
+            addAnswerButtonListeners();
+        }
+
+        function addAnswerButtonListeners() {
+            document.querySelectorAll('.answer-options').forEach(optionsContainer => {
+                optionsContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('answer-btn')) {
+                        // Remove a seleção de outros botões na mesma pergunta
+                        optionsContainer.querySelectorAll('.answer-btn').forEach(btn => btn.classList.remove('selected', 'bg-blue-500', 'text-white'));
+                        // Adiciona a seleção ao botão clicado
+                        e.target.classList.add('selected', 'bg-blue-500', 'text-white');
+                        // Salva a resposta do usuário
+                        const questionItem = e.target.closest('.question-item');
+                        questionItem.dataset.userAnswer = e.target.dataset.answer;
+                    }
+                });
+            });
+        }
+
+        function checkAnswers() {
+            let score = 0;
+            document.querySelectorAll('.question-item').forEach(item => {
+                const index = parseInt(item.dataset.questionIndex, 10);
+                const questionData = questions[index];
+                const userAnswer = item.dataset.userAnswer;
+
+                const feedbackDiv = item.querySelector('.feedback-text');
+                const trueBtn = item.querySelector('[data-answer="true"]');
+                const falseBtn = item.querySelector('[data-answer="false"]');
+
+                // Desabilitar botões
+                trueBtn.disabled = true;
+                falseBtn.disabled = true;
+                trueBtn.classList.remove('hover:bg-slate-300', 'selected', 'bg-blue-500', 'text-white');
+                falseBtn.classList.remove('hover:bg-slate-300', 'selected', 'bg-blue-500', 'text-white');
+
+
+                if (userAnswer === undefined) {
+                    feedbackDiv.textContent = "Você não respondeu esta pergunta.";
+                    feedbackDiv.className = 'feedback-text mt-4 p-4 rounded-lg border-l-4 bg-yellow-100 border-yellow-500';
+                } else {
+                    const isCorrect = userAnswer === String(questionData.correctAnswer);
+                    if (isCorrect) {
+                        score++;
+                        feedbackDiv.textContent = "Correto! " + questionData.explanation;
+                        feedbackDiv.className = 'feedback-text mt-4 p-4 rounded-lg border-l-4 feedback-correct';
+                    } else {
+                        feedbackDiv.textContent = "Incorreto. " + questionData.explanation;
+                        feedbackDiv.className = 'feedback-text mt-4 p-4 rounded-lg border-l-4 feedback-incorrect';
+                    }
+                }
+
+                // Estilizar botões de resposta
+                if (questionData.correctAnswer === true) {
+                    trueBtn.classList.add('btn-correct');
+                    if (userAnswer === 'false') falseBtn.classList.add('btn-incorrect');
+                } else {
+                    falseBtn.classList.add('btn-correct');
+                    if (userAnswer === 'true') trueBtn.classList.add('btn-incorrect');
+                }
+
+                feedbackDiv.classList.remove('hidden');
+            });
+
+            // Mostrar pontuação final
+            scoreText.textContent = `Você acertou ${score} de ${questions.length} perguntas!`;
+            resultsArea.classList.remove('hidden');
+            checkAnswersBtn.classList.add('hidden');
+            restartBtn.classList.remove('hidden');
+        }
+
+        checkAnswersBtn.addEventListener('click', checkAnswers);
+        restartBtn.addEventListener('click', () => {
+            // Recarrega a página para reiniciar
+            window.location.reload();
+        });
+
+        // Inicia o jogo
+        renderQuestions();
+    </script>
+</body>
+
+</html>
