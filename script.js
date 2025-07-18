@@ -27,7 +27,7 @@ const miniGames = [
         title: "Dados: V ou F?",
         description: "Teste seus conhecimentos sobre o que são e onde ficam guardados seus dados pessoais.",
         textEmoji: "❓",
-        path: "./games/dados-v-ou-f.html",
+        path: "./games/v-ou-f.html",
         borderColor: 'border-red-500',
         buttonBgColor: 'bg-red-500'
     },
